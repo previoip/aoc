@@ -36,14 +36,6 @@ def validate_mirroring(product_id):
 def validate_repeating(product_id):
   product_id = str(product_id)
   ndigit = len(product_id)
-  # if ndigit % 2 != 0:
-  #   if ndigit == 1:
-  #     return True
-  #   char = product_id[0]
-  #   for char_i in product_id[1:]:
-  #     if not char == char_i:
-  #       return True
-  #   return False
   nlength = ndigit // 2
   for length in range(nlength,0,-1):
     if ndigit%length != 0: continue
@@ -80,8 +72,6 @@ def part2(instr):
 if __name__ == '__main__':
   import sys
 
-  product_ids = list()
   for line in sys.stdin:
-    # print('part1:', part1(line.strip()))
+    print('part1:', part1(line.strip()))
     print('part2:', part2(line.strip()))
-
