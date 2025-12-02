@@ -1,29 +1,8 @@
-from functools import cache
 
 def parse_ranges(instr):
   ranges = instr.split(',')
   for subrange in ranges:
     yield tuple(map(int, subrange.split('-')))
-
-@cache
-def tenthpower(n):
-  n = abs(n)
-  i = 0
-  while n-10**i >= 0:
-    i += 1
-  return i
-
-def uirtr(n, l):
-  return n // (10**l)
-
-def uiltr(n, l):
-  p = 10**(tenthpower(n)-l)
-  return n - n // p * p
-
-def uisplice(n, offset, length):
-  n = uiltr(n, offset)
-  ndigit = tenthpower(n)
-  return uirtr(n, ndigit-length)
 
 def validate_mirroring(product_id):
   product_id = str(product_id)
