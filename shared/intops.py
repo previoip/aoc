@@ -1,4 +1,6 @@
+from functools import cache
 
+@cache
 def uilog10(n):
   # floor(log10(n))
   n = abs(n)
@@ -21,3 +23,8 @@ def uisplice(n, offset, length):
   n = uitrl(n, offset)
   ndigit = uilog10(n)
   return uitrr(n, ndigit-length)
+
+def uisplit(n, i):
+  ndigit = uilog10(n)
+  return uitrr(n, ndigit-i), uitrl(n, i)
+
