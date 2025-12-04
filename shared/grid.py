@@ -1,4 +1,5 @@
 import sys
+from itertools import product
 
 class GridIndexer:
 
@@ -35,7 +36,13 @@ class GridIndexer:
   def itoc(self, i):
     return self.itox(i), self.itoy(i)
 
-  def xytoi(self, x, y):
+  def xytoi(self, x, y, wrap=False):
+    if wrap:
+      x %= self.w
+      y %= self.h
+    else:
+      if self.isoobxy(x, y):
+        return -1
     return x + self.w * y
 
   def ctoi(self, c):
@@ -73,6 +80,20 @@ class GridIndexer:
     for x, y in self.iterraytracexy(x, y, stride):
       yield self.xytoi(x, y)
 
+  def itersquarekernelxy(self, x, y, size, wrap=False):
+    m = size//2
+    for ox, oy in product(range(size), range(size)):
+      dx = x+ox-m
+      dy = y+oy-m
+      if wrap:
+        dx %= self.w
+        dy %= self.h
+      yield (ox, oy), (dx, dy)
+
+  def itersquarekerneli(self, x, y, size, wrap=False):
+    for (ox, oy), (x, y) in self.itersquarekernelxy(x, y, size, wrap):
+      yield (ox, oy), self.xytoi(x, y, wrap)
+
 
 if __name__ == '__main__':
   import numpy as np
@@ -94,3 +115,14 @@ if __name__ == '__main__':
   ]:
     indices = list(indexer.iterraytracei(2,2,stride))
     print(a[indices], stride)
+
+  print()
+  kernel = np.zeros((3,3))
+  for (x, y), i in indexer.itersquarekerneli(0, 0, 3):
+    kernel[y, x] = a[i]
+  print(kernel)
+
+  for (x, y), (dx, dy) in indexer.itersquarekernelxy(0, 0, 3, wrap=False):
+    kernel[y, x] = ar[dy][dx]
+    print((x, y), (dx, dy))
+  print(kernel)
