@@ -1,5 +1,7 @@
 from shared.intops import uilog10, uisplit
 from queue import Queue
+from shared.sqlite3w import SqlLite3Queue
+
 
 def parse(inp):
   for v in inp.strip().split(' '):
@@ -9,6 +11,7 @@ def worker(states, queue, maxblink):
   item = queue.get()
   if item is None:
     return
+  print(item)
   c, n = item
   if c >= maxblink:
     states['sums'] += 1
@@ -26,6 +29,7 @@ def worker(states, queue, maxblink):
 
 def part1(inp):
   queue = Queue()
+
   states = {'sums':0}
   for c, t in parse(inp):
     queue.put((c, t))
@@ -33,8 +37,11 @@ def part1(inp):
     worker(states, queue, 25)
   return states
 
+
 def part2(inp):
-  queue = Queue()
+  queue = SqlLite3Queue(':memory:')
+  queue.serializer = lambda item: ','.join(map(str, item)) 
+  queue.deserializer = lambda blob: tuple(map(int, blob.split(',')))
   states = {'sums':0}
   for c, t in parse(inp):
     queue.put((c, t))
