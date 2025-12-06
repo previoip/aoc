@@ -1,7 +1,5 @@
 import sys, os
 
-ARG_OPTIONS_HELP = '<path-to-py> <funcname> [stdin]'
-
 def module_from_file(module_name, file_path):
   import importlib.util
   spec = importlib.util.spec_from_file_location(module_name, file_path)
@@ -9,28 +7,56 @@ def module_from_file(module_name, file_path):
   spec.loader.exec_module(module)
   return module
 
+
+def build_argparser():
+  from argparse import ArgumentParser
+  parser = ArgumentParser(prog='aoc')
+  parser.add_argument('modulepath')
+  parser.add_argument('function')
+  parser.add_argument('-i', '--input', type=str, help='fetch input string from arg')
+  parser.add_argument('-f', '--file', type=str, help='fetch input from file')
+  parser.add_argument('-p', '--pipe', action='store_true', help='fetch input from pipe')
+  parser.add_argument('-a', '--all', action='store_true', help='multiline input')
+  return parser
+
 if __name__ == '__main__':
-  if len(sys.argv) == 1:
-    raise ValueError('inadequate args: ' + ARG_OPTIONS_HELP)
+  parser = build_argparser()
+  args = parser.parse_args()
 
-  path = sys.argv[1]
-  if not os.path.exists(path):
-    raise FileNotFoundError(f'cannot relocate module {path}: ')
+  if not os.path.exists(args.modulepath):
+    raise FileNotFoundError(f'cannot relocate module {args.modulepath}')
 
-  funcname = sys.argv[2]
-  module = module_from_file('_module', path)
-  if not hasattr(module, funcname):
-    raise AttributeError(f'module has no attribute {funcname}: ' + ARG_OPTIONS_HELP)
+  module = module_from_file('_module', args.modulepath)
+  if not hasattr(module, args.function):
+    raise AttributeError(f'module has no attribute {args.function}')
 
-  function = getattr(module, funcname)
-  is_all = len(sys.argv) > 3 and sys.argv[3] == '--all'
+  function = getattr(module, args.function)
+  def runfunc(inp):
+    print()
+    print(args.function + ':')
+    print(function(inp))
 
-  if not sys.stdin.isatty():
-    if is_all:
-      print(funcname, ':', function(sys.stdin.read()))
+  if not args.input is None:
+    if args.all:
+      runfunc(args.input)
+    else:
+      runfunc(args.input.splitlines())
+
+  if not args.file is None:
+    if not os.path.exists(args.file) or not os.path.isfile(args.file):
+      raise FileNotFoundError(f'cannot relocate file {args.file}')
+    with open(args.file, 'r') as fp:
+      if args.all:
+        runfunc(fp.read())
+      else:
+        for line in fp.readlines():
+          runfunc(line)
+
+  if args.pipe:
+    if sys.stdin.isatty():
+      raise RuntimeError('pipe is not open')
+    if args.all:
+      runfunc(sys.stdin.read())
     else:
       for line in sys.stdin:
-        print(funcname, ':', function(line))
-  else:
-    for line in sys.argv[3:]:
-      print(funcname, ':', function(line))
+        runfunc(line)
