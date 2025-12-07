@@ -28,12 +28,10 @@ def part1(inp):
   return counter
 
 
-class DriectedMultiTree:
-  def __init__(self):
-    self.upstream = list()
-    self.dwstream = list()
+from shared.ontimed import OnTimelapsed
 
 def part2(inp):
+  ckprint = OnTimelapsed()
   sequence = list(itersequence(inp))
   tachyons = list(map(lambda s: list(get_tachyons(s)), sequence[1:]))
   levels = len(tachyons)
@@ -41,6 +39,7 @@ def part2(inp):
   queue.append((sequence[0].index('S'), 0))
   counter = 0
   while queue:
+    ckprint.checkandprint(10, counter, len(queue))
     tup = queue.pop()
     beam, lv = tup
     if lv >= levels:
