@@ -1,3 +1,4 @@
+from functools import cache
 
 def itersequence(inp):
   for line in inp.splitlines():
@@ -28,26 +29,28 @@ def part1(inp):
   return counter
 
 
-from shared.ontimed import OnTimelapsed
-
 def part2(inp):
-  ckprint = OnTimelapsed()
   sequence = list(itersequence(inp))
   tachyons = list(map(lambda s: list(get_tachyons(s)), sequence[1:]))
   levels = len(tachyons)
-  queue = list()
-  queue.append((sequence[0].index('S'), 0))
-  counter = 0
-  while queue:
-    ckprint.checkandprint(10, counter, len(queue))
-    tup = queue.pop()
-    beam, lv = tup
+  caches = dict()
+
+  def scantree(beam, lv):
+    key = (beam, lv)
+    if key in caches:
+      # print('from cached', key)
+      return caches[key]
+  
+    retv = None
     if lv >= levels:
-      counter +=1
-      continue
-    if beam in tachyons[lv]:
-      for newbeam in split_beams(beam):
-        queue.append((newbeam, lv+1))
+      retv = 1
+    elif beam in tachyons[lv]:
+      retv = 0
+      retv += scantree(beam+1, lv+1)
+      retv += scantree(beam-1, lv+1)
     else:
-      queue.append((beam, lv+1))
-  return counter
+      retv = scantree(beam, lv+1)
+    caches[key] = retv
+    return retv
+
+  return scantree(sequence[0].index('S'), 0)
