@@ -1,50 +1,47 @@
 from shared.intops import uilog10, uisplit
-from queue import Queue
-from shared.sqlite3w import SqlLite3Queue
 
 
 def parse(inp):
   for v in inp.strip().split(' '):
-    yield (0, int(v))
+    yield int(v)
 
-def worker(states, queue, maxblink):
-  item = queue.get()
-  if item is None:
-    return
-  print(item)
-  c, n = item
-  if c >= maxblink:
-    states['sums'] += 1
+
+blink_cache = dict()
+
+def blink(stone, n):
+  key = (stone, n)
+  if key in blink_cache:
+    return blink_cache[key]
+
+  retv = 0
+  if n <= 0:
+    retv = 1
   else:
-    c += 1
-    ndigit = uilog10(n)
-    if n == 0:
-      queue.put((c, 1))
+    ndigit = uilog10(stone)
+    if stone == 0:
+      retv = blink(1, n-1)
     elif ndigit % 2 == 0:
-      n0, n1 = uisplit(n, ndigit//2)
-      queue.put((c, n0))
-      queue.put((c, n1))
+      s0, s1 = uisplit(stone, ndigit//2)
+      retv += blink(s0, n-1)
+      retv += blink(s1, n-1)
     else:
-      queue.put((c, n*2024))  
+      retv += blink(stone*2024, n-1)
+  blink_cache[key] = retv
+  return retv
+    
+
 
 def part1(inp):
-  queue = Queue()
-
-  states = {'sums':0}
-  for c, t in parse(inp):
-    queue.put((c, t))
-  while not queue.empty():
-    worker(states, queue, 25)
-  return states
+  print(inp)
+  sums = 0
+  for stone in parse(inp):
+    sums += blink(stone, 25)
+  return sums
 
 
 def part2(inp):
-  queue = SqlLite3Queue(':memory:')
-  queue.serializer = lambda item: ','.join(map(str, item)) 
-  queue.deserializer = lambda blob: tuple(map(int, blob.split(',')))
-  states = {'sums':0}
-  for c, t in parse(inp):
-    queue.put((c, t))
-  while not queue.empty():
-    worker(states, queue, 75)
-  return states
+  print(inp)
+  sums = 0
+  for stone in parse(inp):
+    sums += blink(stone, 75)
+  return sums
