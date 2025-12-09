@@ -40,7 +40,8 @@ if __name__ == '__main__':
     if args.all:
       runfunc(args.input)
     else:
-      runfunc(args.input.splitlines())
+      for line in args.input.splitlines():
+        runfunc(line)
 
   if not args.file is None:
     if not os.path.exists(args.file) or not os.path.isfile(args.file):
